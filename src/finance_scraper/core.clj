@@ -1,6 +1,7 @@
 (ns finance-scraper.core
   (require [clj-http.client :as client]
            [hickory.select :as s]
+           [clojure.java.jdbc :as sql]
            [hickory.core :as parser]))
 
 (defn scrape-di []
@@ -13,10 +14,15 @@
       (read-string))
   )
 
+(defn persist-di [di-index]
+  (sql/insert! "postgresql://172.17.0.2:5432/financeindexes"
+               :indexes 
+               { :timestamp (java.sql.Timestamp. (System/currentTimeMillis)) :value di-index }))
+
 
 (defn -main
   [& args]
   (println "scraping taxa DI")
-  (clojure.pprint/pprint (scrape-di))
+  (clojure.pprint/pprint (persist-di (scrape-di)))
   )
 
