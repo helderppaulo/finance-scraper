@@ -1,7 +1,8 @@
 (ns finance-scraper.core
   (require [clj-http.client :as http]
            [hickory.select :as s]
-           [hickory.core :as parser]))
+           [hickory.core :as parser]
+           [immutant.scheduling :refer :all]))
 
 (def site-di "https://www.cetip.com.br/")
 
@@ -25,13 +26,14 @@
       select-di
       pct-str->number))
 
-(defn scrape-di []
-  (-> (http/get site-di)
-      :body
-      extract-di))
+(defn scrape-di [callback]
+  (fn [] (-> (http/get site-di)
+             :body
+             extract-di
+             callback)))
 
 (defn -main
   [& args]
-  (println "scraping taxa DI")
-  (clojure.pprint/pprint (scrape-di)))
-
+  (prn "scheduling taxa DI scrape")
+  (schedule (scrape-di prn)
+    (cron "0 * * * * ?")))
